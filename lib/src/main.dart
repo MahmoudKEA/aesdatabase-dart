@@ -156,6 +156,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     return cipher.encryptToFileSync(
       data: data,
       path: _drive.databasePath,
+      ignoreFileExists: true,
       progressCallback: progressCallback,
     );
   }
