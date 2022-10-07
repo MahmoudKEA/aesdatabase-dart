@@ -117,6 +117,9 @@ final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
 // [outputDir]: The destination you want to export to ( Default=backupDir )
 // [progressCallback]: Tracking the progress value
 String backupFilePath = await db.exportBackup(
+    rowIndexes: [0, 1, 2],
+    attachmentNames: ['photo.png'],
+    key: 'specific password',
     outputDir: 'desktop',
     progressCallback: (value) => print('progressing: $value'),
 );
@@ -129,6 +132,10 @@ String backupFilePath = await db.exportBackup(
 // [progressCallback]: Tracking the progress value
 await db.importBackup(
     path: backupFilePath,
+    rowIndexes: [0, 1, 2],
+    attachmentNames: ['photo.png'],
+    key: 'specific password',
+    removeAfterComplete: false,
     progressCallback: (value) => print('progressing: $value'),
 );
 
