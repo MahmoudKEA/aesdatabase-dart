@@ -16,7 +16,7 @@ final DriveSetup driveSetup = DriveSetup(
     hasBackup: true,
 );
 
-// Create directories (Required)
+// Create directories
 List<String> dirsCreated = driveSetup.create();
 
 // Check example/drive_example.dart for more examples
@@ -66,7 +66,11 @@ driveSetup.create();
 // Connect with database engine
 final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
 
-// Add a file into attachments database
+// Save file attachment into database as encrypted with AES extension
+// [name]: It is the name of a folder to collect some files in one folder
+// [path]: Your file path
+// [ignoreFileExists]: Ignore file is already exists before
+// [progressCallback]: Tracking the progress value
 String attachmentSavedPath = await db.importAttachment(
     name: 'folderName',
     path: 'desktop/photo.png',
@@ -74,7 +78,13 @@ String attachmentSavedPath = await db.importAttachment(
     progressCallback: (value) => print('progressing: $value'),
 );
 
-// Export a file from attachments to your drive
+// Export your file attachment to specific path
+// WARNING: Don't add ".aes" extension to file name
+// [name]: It is the name of a folder to collect some files in one folder
+// [fileName]: File name
+// [outputDir]: The destination you want to export to ( Default=TempDir )
+// [ignoreFileExists]: Ignore file is already exists before
+// [progressCallback]: Tracking the progress value
 String outputPath = await db.exportAttachment(
     name: 'folderName',
     fileName: 'photo.png',
@@ -99,13 +109,24 @@ driveSetup.create();
 final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
 
 
-// Add a file into attachments database
+// Export a backup of all ur database
+// WARNING: Don't add ".aes" extension to file name
+// [rowIndexes]: Select some row indexes ( Default export all rows )
+// [attachmentNames]: Select some files name ( Default export all attachments )
+// [key]: Set a password ( Default: use the public key you entered with databaseEngine )
+// [outputDir]: The destination you want to export to ( Default=backupDir )
+// [progressCallback]: Tracking the progress value
 String backupFilePath = await db.exportBackup(
     outputDir: 'desktop',
     progressCallback: (value) => print('progressing: $value'),
 );
 
-// Export a file from attachments to your drive
+// Import a backup file
+// [rowIndexes]: Select some row indexes ( Default import all rows )
+// [attachmentNames]: Select some files name ( Default import all attachments )
+// [key]: Set a password if exported with a different password
+// [removeAfterComplete]: Remove backup file after importing done
+// [progressCallback]: Tracking the progress value
 await db.importBackup(
     path: backupFilePath,
     progressCallback: (value) => print('progressing: $value'),
