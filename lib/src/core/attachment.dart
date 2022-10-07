@@ -1,9 +1,10 @@
 import 'dart:io';
 
-import 'package:aesdatabase/src/core/core.dart';
-import 'package:aesdatabase/src/drive.dart';
 import 'package:aescrypto/aescrypto.dart';
 import 'package:path/path.dart' as pathlib;
+
+import '../drive.dart';
+import 'core.dart';
 
 mixin AttachmentCore {
   late DriveSetup _drive;
@@ -36,6 +37,22 @@ mixin AttachmentCore {
     }
   }
 
+  Future<String> importAttachment({
+    required String name,
+    required String path,
+    bool ignoreFileExists = false,
+    void Function(int value)? progressCallback,
+  }) {
+    return Future(() {
+      return importAttachmentSync(
+        name: name,
+        path: path,
+        ignoreFileExists: ignoreFileExists,
+        progressCallback: progressCallback,
+      );
+    });
+  }
+
   String importAttachmentSync({
     required String name,
     required String path,
@@ -53,6 +70,24 @@ mixin AttachmentCore {
       ignoreFileExists: ignoreFileExists,
       progressCallback: progressCallback,
     );
+  }
+
+  Future<String> exportAttachment({
+    required String name,
+    required String fileName,
+    String? outputDir,
+    bool ignoreFileExists = false,
+    void Function(int value)? progressCallback,
+  }) {
+    return Future(() {
+      return exportAttachmentSync(
+        name: name,
+        fileName: fileName,
+        outputDir: outputDir,
+        ignoreFileExists: ignoreFileExists,
+        progressCallback: progressCallback,
+      );
+    });
   }
 
   String exportAttachmentSync({
@@ -78,6 +113,18 @@ mixin AttachmentCore {
     );
   }
 
+  Future<bool> removeAttachment({
+    required String name,
+    required String fileName,
+  }) {
+    return Future(() {
+      return removeAttachmentSync(
+        name: name,
+        fileName: fileName,
+      );
+    });
+  }
+
   bool removeAttachmentSync({
     required String name,
     required String fileName,
@@ -96,6 +143,18 @@ mixin AttachmentCore {
     }
 
     return valid;
+  }
+
+  Future<bool> existsAttachment({
+    required String name,
+    required String fileName,
+  }) {
+    return Future(() {
+      return existsAttachmentSync(
+        name: name,
+        fileName: fileName,
+      );
+    });
   }
 
   bool existsAttachmentSync({

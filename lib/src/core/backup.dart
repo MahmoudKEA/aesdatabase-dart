@@ -3,11 +3,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:aesdatabase/src/core/core.dart';
-import 'package:aesdatabase/src/drive.dart';
-import 'package:aesdatabase/src/utils.dart';
 import 'package:aescrypto/aescrypto.dart';
 import 'package:path/path.dart' as pathlib;
+
+import '../drive.dart';
+import '../utils.dart';
+import 'core.dart';
 
 mixin BackupCore {
   late DriveSetup _drive;
@@ -31,6 +32,26 @@ mixin BackupCore {
     _rows = rows;
     _cipher = cipher;
     _insertSync = insertSync;
+  }
+
+  Future<void> importBackup({
+    required String path,
+    List<int>? rowIndexes,
+    List<String>? attachmentNames,
+    String? key,
+    bool removeAfterComplete = false,
+    void Function(int value)? progressCallback,
+  }) {
+    return Future(() {
+      return importBackupSync(
+        path: path,
+        rowIndexes: rowIndexes,
+        attachmentNames: attachmentNames,
+        key: key,
+        removeAfterComplete: removeAfterComplete,
+        progressCallback: progressCallback,
+      );
+    });
   }
 
   void importBackupSync({
@@ -113,6 +134,24 @@ mixin BackupCore {
 
     tempFile.closeSync();
     File(tempPath).deleteSync();
+  }
+
+  Future<String> exportBackup({
+    List<int>? rowIndexes,
+    List<String>? attachmentNames,
+    String? outputDir,
+    String? key,
+    void Function(int value)? progressCallback,
+  }) {
+    return Future(() {
+      return exportBackupSync(
+        rowIndexes: rowIndexes,
+        attachmentNames: attachmentNames,
+        outputDir: outputDir,
+        key: key,
+        progressCallback: progressCallback,
+      );
+    });
   }
 
   String exportBackupSync({
