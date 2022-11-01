@@ -23,17 +23,19 @@ mixin AttachmentCore {
   }) async* {
     attachmentValidator(_drive.hasAttachments);
 
-    for (FileSystemEntity file in Directory(_drive.attachmentDir).listSync(
-      recursive: true,
-    )) {
-      if ((file.statSync().type == FileSystemEntityType.directory) ||
+    await for (final FileSystemEntity file in Directory(
+      _drive.attachmentDir,
+    ).list(recursive: true)) {
+      if (await file
+              .stat()
+              .then((value) => value.type == FileSystemEntityType.directory) ||
           (name != null && pathlib.basename(file.parent.path) != name) ||
           (fileName != null &&
-              pathlib.basename(file.path) != addExtension(fileName))) {
+              pathlib.basename(file.path) != addAESExtension(fileName))) {
         continue;
       }
 
-      yield removeExtension(file.path);
+      yield removeAESExtension(file.path);
     }
   }
 
@@ -42,29 +44,13 @@ mixin AttachmentCore {
     required String path,
     bool ignoreFileExists = false,
     void Function(int value)? progressCallback,
-  }) {
-    return Future(() {
-      return importAttachmentSync(
-        name: name,
-        path: path,
-        ignoreFileExists: ignoreFileExists,
-        progressCallback: progressCallback,
-      );
-    });
-  }
-
-  String importAttachmentSync({
-    required String name,
-    required String path,
-    bool ignoreFileExists = false,
-    void Function(int value)? progressCallback,
-  }) {
+  }) async {
     attachmentValidator(_drive.hasAttachments);
-    String directory = pathlib.join(_drive.attachmentDir, name);
+    final String directory = pathlib.join(_drive.attachmentDir, name);
 
     _cipher.setKey(_key);
 
-    return _cipher.encryptFileSync(
+    return await _cipher.encryptFile(
       path: path,
       directory: directory,
       ignoreFileExists: ignoreFileExists,
@@ -78,34 +64,17 @@ mixin AttachmentCore {
     String? outputDir,
     bool ignoreFileExists = false,
     void Function(int value)? progressCallback,
-  }) {
-    return Future(() {
-      return exportAttachmentSync(
-        name: name,
-        fileName: fileName,
-        outputDir: outputDir,
-        ignoreFileExists: ignoreFileExists,
-        progressCallback: progressCallback,
-      );
-    });
-  }
-
-  String exportAttachmentSync({
-    required String name,
-    required String fileName,
-    String? outputDir,
-    bool ignoreFileExists = false,
-    void Function(int value)? progressCallback,
-  }) {
+  }) async {
     attachmentValidator(_drive.hasAttachments);
-    String path = addExtension(
+    final String path = addAESExtension(
       pathlib.join(_drive.attachmentDir, name, fileName),
     );
 
     outputDir ??= _drive.tempDir;
 
     _cipher.setKey(_key);
-    return _cipher.decryptFileSync(
+
+    return await _cipher.decryptFile(
       path: path,
       directory: outputDir,
       ignoreFileExists: ignoreFileExists,
@@ -116,28 +85,16 @@ mixin AttachmentCore {
   Future<bool> removeAttachment({
     required String name,
     required String fileName,
-  }) {
-    return Future(() {
-      return removeAttachmentSync(
-        name: name,
-        fileName: fileName,
-      );
-    });
-  }
-
-  bool removeAttachmentSync({
-    required String name,
-    required String fileName,
-  }) {
+  }) async {
     attachmentValidator(_drive.hasAttachments);
-    String directory = pathlib.join(_drive.attachmentDir, name);
-    String path = addExtension(pathlib.join(directory, fileName));
+    final String directory = pathlib.join(_drive.attachmentDir, name);
+    final String path = addAESExtension(pathlib.join(directory, fileName));
     bool valid = false;
 
     try {
-      File(path).deleteSync();
+      await File(path).delete();
       valid = true;
-      Directory(directory).deleteSync();
+      await Directory(directory).delete();
     } on FileSystemException {
       // Ignore if the directory contains other files or file not exists
     }
@@ -148,24 +105,12 @@ mixin AttachmentCore {
   Future<bool> existsAttachment({
     required String name,
     required String fileName,
-  }) {
-    return Future(() {
-      return existsAttachmentSync(
-        name: name,
-        fileName: fileName,
-      );
-    });
-  }
-
-  bool existsAttachmentSync({
-    required String name,
-    required String fileName,
-  }) {
+  }) async {
     attachmentValidator(_drive.hasAttachments);
-    String path = addExtension(
+    final String path = addAESExtension(
       pathlib.join(_drive.attachmentDir, name, fileName),
     );
 
-    return File(path).existsSync();
+    return await File(path).exists();
   }
 }
