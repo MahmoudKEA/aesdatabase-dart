@@ -17,7 +17,7 @@ final DriveSetup driveSetup = DriveSetup(
 );
 
 // Create directories
-List<String> dirsCreated = driveSetup.create();
+List<String> dirsCreated = await driveSetup.create();
 
 // Check example/drive_example.dart for more examples
 // ...
@@ -32,7 +32,7 @@ final DriveSetup driveSetup = DriveSetup(
     hasAttachments: true,
     hasBackup: true,
 );
-driveSetup.create();
+await driveSetup.create();
 
 // Connect with database engine
 final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
@@ -41,7 +41,7 @@ final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
 await db.load();
 
 // Or create a table if this is the first time
-await db.createTable(['username', 'password', 'age']);
+db.createTable(['username', 'password', 'age']);
 
 // Insert new row
 await db.insert(
@@ -61,7 +61,7 @@ import 'package:aesdatabase/aesdatabase.dart';
 
 // Build the driver
 final DriveSetup driveSetup = DriveSetup(hasAttachments: true);
-driveSetup.create();
+await driveSetup.create();
 
 // Connect with database engine
 final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
@@ -103,7 +103,7 @@ import 'package:aesdatabase/aesdatabase.dart';
 
 // Build the driver
 final DriveSetup driveSetup = DriveSetup(hasBackup: true);
-driveSetup.create();
+await driveSetup.create();
 
 // Connect with database engine
 final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
