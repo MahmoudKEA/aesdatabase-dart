@@ -17,7 +17,7 @@ void rowTypeValidator(
   List<String> columnTitles,
   List<dynamic> rows,
 ) {
-  List<dynamic> firstRow;
+  final List<dynamic> firstRow;
 
   try {
     firstRow = rows[0];
@@ -27,11 +27,11 @@ void rowTypeValidator(
   }
 
   for (int index = 0; index < row.length; index++) {
-    Type itemType = row[index].runtimeType;
-    Type expectedType = firstRow[index].runtimeType;
+    final Type itemType = row[index].runtimeType;
+    final Type expectedType = firstRow[index].runtimeType;
 
     if (itemType != expectedType) {
-      String title = columnTitles[index];
+      final String title = columnTitles[index];
       throw Exception(
         "$title type expected $expectedType, but got $itemType",
       );
