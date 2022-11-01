@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:aescrypto/aescrypto.dart';
@@ -12,7 +12,7 @@ import 'models.dart';
 class DatabaseEngine with AttachmentCore, BackupCore {
   DatabaseEngine(this._drive, this._key) {
     attachmentInit(_drive, _key, cipher);
-    backupInit(_drive, _key, _columns, _rows, cipher, insertSync);
+    backupInit(_drive, _key, _columns, _rows, cipher, insert);
   }
 
   final DriveSetup _drive;
@@ -21,18 +21,12 @@ class DatabaseEngine with AttachmentCore, BackupCore {
   final List<List<dynamic>> _rows = [];
   final AESCrypto cipher = AESCrypto(key: "");
 
-  Future<void> createTable(List<String> columnTitles) {
-    return Future(() {
-      return createTableSync(columnTitles);
-    });
-  }
-
-  void createTableSync(List<String> columnTitles) {
+  void createTable(List<String> columnTitles) {
     if (_columns.isNotEmpty) {
       throw Exception("This database already has table created");
     }
 
-    for (String title in columnTitles) {
+    for (final String title in columnTitles) {
       if (columnTitles.count(title) > 1) {
         throw Exception("$title title is duplicated");
       }
@@ -50,8 +44,8 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     columnTitles ??= _columns;
 
     for (int index = 0; index < _rows.length; index++) {
-      List<dynamic> row = _rows[index];
-      Map<String, dynamic> result = {};
+      final List<dynamic> row = _rows[index];
+      final Map<String, dynamic> result = {};
 
       _columns.forEachIndexed((i, title) {
         columnTitles!.contains(title) ? result.addAll({title: row[i]}) : null;
@@ -66,159 +60,161 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     }
   }
 
-  Future<void> insert({int rowIndex = 0, required Map<String, dynamic> items}) {
-    return Future(() {
-      return insertSync(rowIndex: rowIndex, items: items);
-    });
-  }
-
-  void insertSync({int rowIndex = 0, required Map<String, dynamic> items}) {
+  Future<void> insert({
+    int rowIndex = 0,
+    required Map<String, dynamic> items,
+  }) async {
     tableCreationValidator(_columns);
 
-    List<dynamic> row = _columns.mapIndexed((index, title) {
-      var item = items[title];
-      item ?? (throw Exception("Please define $title value"));
-      return item;
-    }).toList();
+    final ReceivePort receivePort = ReceivePort();
 
-    rowTypeValidator(row, _columns, _rows);
-    _rows.insert(rowIndex, row);
+    Isolate.spawn<SendPort>(
+      (sendPort) {
+        try {
+          final List<dynamic> row = _columns.mapIndexed((index, title) {
+            final dynamic item = items[title];
+            item ?? (throw Exception("Please define $title value"));
+            return item;
+          }).toList();
+
+          rowTypeValidator(row, _columns, _rows);
+
+          sendPort.send(row);
+        } catch (e) {
+          sendPort.send(e);
+        }
+      },
+      receivePort.sendPort,
+    );
+
+    final dynamic result = await receivePort.first;
+    if (result is Exception) throw result;
+
+    _rows.insert(rowIndex, result);
   }
 
   Future<void> edit({
     required int rowIndex,
     required Map<String, dynamic> items,
-  }) {
-    return Future(() {
-      return editSync(rowIndex: rowIndex, items: items);
-    });
-  }
-
-  void editSync({required int rowIndex, required Map<String, dynamic> items}) {
+  }) async {
     tableCreationValidator(_columns);
     rowIndexValidator(rowIndex, _rows);
 
-    List<dynamic> row = _columns.mapIndexed((index, title) {
-      var item = items[title];
-      return item ?? _rows[rowIndex][index];
-    }).toList();
+    final ReceivePort receivePort = ReceivePort();
 
-    rowTypeValidator(row, _columns, _rows);
-    _rows[rowIndex] = row;
+    Isolate.spawn<SendPort>(
+      (sendPort) {
+        try {
+          final List<dynamic> row = _columns.mapIndexed((index, title) {
+            var item = items[title];
+            return item ?? _rows[rowIndex][index];
+          }).toList();
+
+          rowTypeValidator(row, _columns, _rows);
+
+          sendPort.send(row);
+        } catch (e) {
+          sendPort.send(e);
+        }
+      },
+      receivePort.sendPort,
+    );
+
+    final dynamic result = await receivePort.first;
+    if (result is Exception) throw result;
+
+    _rows[rowIndex] = result;
   }
 
-  Future<void> removeColumn(String title) {
-    return Future(() {
-      return removeColumnSync(title);
-    });
-  }
-
-  void removeColumnSync(String title) {
+  void removeColumn(String title) {
     tableCreationValidator(_columns);
 
-    int columnIndex = _columns.indexOf(title);
+    final int columnIndex = _columns.indexOf(title);
     if (columnIndex < 0) {
       throw Exception("Title $title is not defined");
     }
 
     _columns.removeAt(columnIndex);
 
-    for (List<dynamic> row in _rows) {
+    for (final List<dynamic> row in _rows) {
       row.removeAt(columnIndex);
     }
   }
 
-  Future<void> removeRow(int rowIndex) {
-    return Future(() {
-      return removeRowSync(rowIndex);
-    });
-  }
-
-  void removeRowSync(int rowIndex) {
+  void removeRow(int rowIndex) {
     tableCreationValidator(_columns);
     rowIndexValidator(rowIndex, _rows);
     _rows.removeAt(rowIndex);
   }
 
-  Future<void> clear() {
-    return Future(() {
-      return clearSync();
-    });
-  }
-
-  void clearSync() {
+  void clear() {
     _rows.clear();
   }
 
-  Future<int> countColumn() {
-    return Future(() {
-      return countColumnSync();
-    });
-  }
-
-  int countColumnSync() {
+  int countColumn() {
     return _columns.length;
   }
 
-  Future<int> countRow() {
-    return Future(() {
-      return countRowSync();
-    });
-  }
-
-  int countRowSync() {
+  int countRow() {
     return _rows.length;
   }
 
-  Future<bool> load({void Function(int value)? progressCallback}) {
-    return Future(() {
-      return loadSync(progressCallback: progressCallback);
-    });
-  }
+  Future<bool> load({void Function(int value)? progressCallback}) async {
+    _drive.isCreated ? null : await _drive.create();
 
-  bool loadSync({void Function(int value)? progressCallback}) {
-    _drive.isCreated ? null : _drive.create();
     cipher.setKey(_key);
 
+    final ReceivePort receivePort = ReceivePort();
+
     try {
+      final Uint8List data = await cipher.decryptFromFile(
+        path: addAESExtension(_drive.databasePath),
+        progressCallback: progressCallback,
+      );
+
+      Isolate.spawn<SendPort>(
+        (sendPort) async {
+          sendPort.send(
+            await jsonDecodeFromBytes(data),
+          );
+        },
+        receivePort.sendPort,
+      );
+
       _rows.addAll(
-        jsonDecode(
-          utf8.decode(
-            cipher.decryptFromFileSync(
-              path: addExtension(_drive.databasePath),
-              progressCallback: progressCallback,
-            ),
-          ),
-        ).cast<List<dynamic>>(),
+        await receivePort.first.then((value) => value.cast<List<dynamic>>()),
       );
     } on FileSystemException {
       return false;
     }
 
-    List<String> columnTitles = _rows.removeAt(0).cast<String>();
-    createTableSync(columnTitles);
+    final List<String> columnTitles = _rows.removeAt(0).cast<String>();
+    createTable(columnTitles);
 
     return true;
   }
 
-  Future<String> dump({void Function(int value)? progressCallback}) {
-    return Future(() {
-      return dumpSync(progressCallback: progressCallback);
-    });
-  }
-
-  String dumpSync({void Function(int value)? progressCallback}) {
+  Future<String> dump({void Function(int value)? progressCallback}) async {
     tableCreationValidator(_columns);
-    _drive.isCreated ? null : _drive.create();
+    _drive.isCreated ? null : await _drive.create();
 
-    _rows.insert(0, _columns);
-    Uint8List data = Uint8List.fromList(jsonEncode(_rows).codeUnits);
-    _rows.removeAt(0);
+    final ReceivePort receivePort = ReceivePort();
+
+    Isolate.spawn<SendPort>(
+      (sendPort) async {
+        _rows.insert(0, _columns);
+
+        sendPort.send(
+          await jsonEncodeToBytes(_rows),
+        );
+      },
+      receivePort.sendPort,
+    );
 
     cipher.setKey(_key);
 
-    return cipher.encryptToFileSync(
-      data: data,
+    return await cipher.encryptToFile(
+      data: await receivePort.first,
       path: _drive.databasePath,
       ignoreFileExists: true,
       progressCallback: progressCallback,
