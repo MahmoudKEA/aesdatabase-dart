@@ -1,6 +1,6 @@
 import 'package:aesdatabase/aesdatabase.dart';
 
-void main() {
+void main() async {
   // Create driver (Required)
   final DriveSetup driveSetup = DriveSetup(
     hasAttachments: true,
@@ -8,10 +8,10 @@ void main() {
   );
 
   // Create directories (Required)
-  List<String> dirsCreated = driveSetup.create();
+  List<String> dirsCreated = await driveSetup.create();
 
   // Delete directories
-  List<String> dirsDeleted = driveSetup.delete();
+  List<String> dirsDeleted = await driveSetup.delete();
 
   // Checkers
   driveSetup.hasAttachments;

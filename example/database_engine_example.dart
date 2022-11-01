@@ -6,7 +6,7 @@ void main() async {
     hasAttachments: true,
     hasBackup: true,
   );
-  driveSetup.create();
+  await driveSetup.create();
 
   final DatabaseEngine databaseEngine = DatabaseEngine(
     driveSetup,
@@ -34,16 +34,16 @@ void main() async {
   await databaseEngine.edit(rowIndex: 0, items: {'age': 21});
 
   // Remove row by index
-  await databaseEngine.removeRow(0);
+  databaseEngine.removeRow(0);
 
   // Remove column by title
-  await databaseEngine.removeColumn('age');
+  databaseEngine.removeColumn('age');
 
   // Get coulmns count
-  await databaseEngine.countColumn();
+  databaseEngine.countColumn();
 
   // Get rows count
-  await databaseEngine.countRow();
+  databaseEngine.countRow();
 
   // Save all data and show progress bar value
   String databaseOutputPath = await databaseEngine.dump(
