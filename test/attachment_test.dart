@@ -24,14 +24,14 @@ void main() {
     String filePath = pathlib.join(driveSetup.tempDir, fileName);
     late String fileSHA256;
 
-    setUpAll(() {
-      driveSetup.create();
+    setUpAll(() async {
+      await driveSetup.create();
 
-      if (!File(filePath).existsSync()) {
-        File(filePath).writeAsStringSync('Any Content' * 10000);
+      if (!await File(filePath).exists()) {
+        await File(filePath).writeAsString('Any Content' * 10000);
       }
 
-      fileSHA256 = fileChecksumSync(filePath);
+      fileSHA256 = await fileChecksum(filePath);
     });
 
     test("Test (importAttachment)", () async {
@@ -79,7 +79,7 @@ file: $file
         ignoreFileExists: true,
         progressCallback: (value) => printDebug('Exporting...: $value'),
       );
-      bool isExists = File(outputPath).existsSync();
+      bool isExists = await File(outputPath).exists();
 
       printDebug("""
 outputPath: $outputPath
@@ -91,7 +91,7 @@ isExists: $isExists
         pathlib.join('.', outputPath),
         contains(pathlib.join(driveSetup.tempDir, fileName)),
       );
-      expect(fileSHA256, equals(fileChecksumSync(filePath)));
+      expect(fileSHA256, equals(await fileChecksum(filePath)));
       expect(isExists, isTrue);
     });
 

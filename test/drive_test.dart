@@ -17,7 +17,7 @@ void main() {
     );
     const String mainDir = 'storage';
 
-    test("Test default attributes", () async {
+    test("Test default attributes", () {
       String tempDir = pathlib.join('.', 'temp');
 
       String databaseDir = pathlib.join('.', 'database');
@@ -51,7 +51,7 @@ backupPath: ${driveSetup.backupPath}
       expect(driveSetup.backupPath, equals(backupPath));
     });
 
-    test("Test (tempUpdate)", () async {
+    test("Test (tempUpdate)", () {
       String folderName = 'tmp';
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.tempUpdate(main: mainDir, folder: folderName);
@@ -63,7 +63,7 @@ tempDir: ${driveSetup.tempDir}
       expect(driveSetup.tempDir, equals(directory));
     });
 
-    test("Test (attachmentUpdate)", () async {
+    test("Test (attachmentUpdate)", () {
       String folderName = 'attachs';
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.attachmentUpdate(main: mainDir, folder: folderName);
@@ -75,7 +75,7 @@ attachmentDir: ${driveSetup.attachmentDir}
       expect(driveSetup.attachmentDir, equals(directory));
     });
 
-    test("Test (databaseUpdate)", () async {
+    test("Test (databaseUpdate)", () {
       String folderName = 'data';
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.databaseUpdate(main: mainDir, folder: folderName);
@@ -89,7 +89,7 @@ databasePath: ${driveSetup.databasePath}
       expect(driveSetup.databasePath, contains(directory));
     });
 
-    test("Test (backupUpdate)", () async {
+    test("Test (backupUpdate)", () {
       String folderName = 'exports';
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.backupUpdate(main: mainDir, folder: folderName);
@@ -104,7 +104,7 @@ backupPath: ${driveSetup.backupPath}
     });
 
     test("Test (create)", () async {
-      List<String> files = driveSetup.create();
+      List<String> files = await driveSetup.create();
 
       for (String path in files) {
         printDebug("""
@@ -112,7 +112,7 @@ path Created: $path
       """);
 
         expect(path.startsWith(mainDir), isTrue);
-        expect(Directory(path).existsSync(), isTrue);
+        expect(await Directory(path).exists(), isTrue);
       }
 
       expect(files.length, equals(4));
@@ -120,14 +120,14 @@ path Created: $path
     });
 
     test("Test (delete)", () async {
-      List<String> files = driveSetup.delete();
+      List<String> files = await driveSetup.delete();
 
       for (String path in files) {
         printDebug("""
 path Deleted: $path
       """);
 
-        expect(Directory(path).existsSync(), isFalse);
+        expect(await Directory(path).exists(), isFalse);
       }
 
       expect(files.length, equals(4));

@@ -12,7 +12,7 @@ void main() {
     const String path = 'folder/file/data.txt';
 
     test("Test (pathWithDate)", () async {
-      String result = await pathWithDate(path);
+      String result = pathWithDate(path);
 
       printDebug("""
 pathWithDate: $result

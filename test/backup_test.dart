@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:aescrypto/aescrypto.dart';
 import 'package:aesdatabase/aesdatabase.dart';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as pathlib;
@@ -30,29 +29,26 @@ void main() {
     String attachName = 'mydataBackup';
     String attachFileName = 'dataBackup.txt';
     String attachFilePath = pathlib.join(driveSetup.tempDir, attachFileName);
-    late String fileSHA256;
 
     late String backupFilePath;
 
-    setUpAll(() {
-      driveSetup.create();
+    setUpAll(() async {
+      await driveSetup.create();
 
-      databaseEngine.createTableSync(titles);
+      databaseEngine.createTable(titles);
 
       for (Map<String, dynamic> row in rowsData) {
-        databaseEngine.insertSync(
-          rowIndex: databaseEngine.countRowSync(),
+        await databaseEngine.insert(
+          rowIndex: databaseEngine.countRow(),
           items: row,
         );
       }
 
-      if (!File(attachFilePath).existsSync()) {
-        File(attachFilePath).writeAsStringSync('Any Content' * 10000);
+      if (!await File(attachFilePath).exists()) {
+        await File(attachFilePath).writeAsString('Any Content' * 10000);
       }
 
-      fileSHA256 = fileChecksumSync(attachFilePath);
-
-      databaseEngine.importAttachmentSync(
+      await databaseEngine.importAttachment(
         name: attachName,
         path: attachFilePath,
         ignoreFileExists: true,
@@ -63,7 +59,7 @@ void main() {
       backupFilePath = await databaseEngine.exportBackup(
         progressCallback: (value) => printDebug('Backup exporting...: $value'),
       );
-      bool isExists = File(backupFilePath).existsSync();
+      bool isExists = await File(backupFilePath).exists();
 
       printDebug("""
 backupFilePath: $backupFilePath
@@ -75,8 +71,8 @@ isExists: $isExists
     });
 
     test("Test (importBackup)", () async {
-      databaseEngine.clearSync();
-      databaseEngine.removeAttachmentSync(
+      databaseEngine.clear();
+      await databaseEngine.removeAttachment(
         name: attachName,
         fileName: attachFileName,
       );
@@ -86,7 +82,7 @@ isExists: $isExists
         progressCallback: (value) => printDebug('Backup importing...: $value'),
       );
 
-      int countRow = databaseEngine.countRowSync();
+      int countRow = databaseEngine.countRow();
 
       bool isAttachExists = await databaseEngine.existsAttachment(
         name: attachName,

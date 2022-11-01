@@ -23,16 +23,16 @@ void main() {
     final List<String> titles = getTitlesDataTest();
     final List<Map<String, dynamic>> rowsData = getRowsDataTest();
 
-    setUpAll(() {
-      driveSetup.create();
+    setUpAll(() async {
+      await driveSetup.create();
     });
 
-    test("Test (createTable) with duplicate value", () async {
+    test("Test (createTable) with duplicate value", () {
       bool isTableCreated;
       Object? error;
 
       try {
-        await databaseEngine.createTable([...titles, 'username']);
+        databaseEngine.createTable([...titles, 'username']);
         isTableCreated = true;
       } catch (e) {
         error = e;
@@ -47,11 +47,11 @@ Error: $error
       expect(isTableCreated, isFalse);
     });
 
-    test("Test (createTable) first time", () async {
+    test("Test (createTable) first time", () {
       bool isTableCreated;
 
       try {
-        await databaseEngine.createTable(titles);
+        databaseEngine.createTable(titles);
         isTableCreated = true;
       } catch (e) {
         isTableCreated = false;
@@ -64,12 +64,12 @@ isTableCreated: $isTableCreated
       expect(isTableCreated, isTrue);
     });
 
-    test("Test (createTable) already created before", () async {
+    test("Test (createTable) already created before", () {
       bool isTableCreated;
       Object? error;
 
       try {
-        await databaseEngine.createTable(titles);
+        databaseEngine.createTable(titles);
         isTableCreated = true;
       } catch (e) {
         error = e;
@@ -90,7 +90,7 @@ Error: $error
       try {
         for (Map<String, dynamic> row in rowsData) {
           await databaseEngine.insert(
-            rowIndex: databaseEngine.countRowSync(),
+            rowIndex: databaseEngine.countRow(),
             items: row,
           );
         }
@@ -164,7 +164,7 @@ row: ${row.items}
       }
     });
 
-    test("Test (select) some columns / rows", () async {
+    test("Test (select) get username/age/gender of all females", () async {
       List<Map<String, dynamic>> data = [];
 
       await for (RowModel row in databaseEngine.select(
@@ -187,7 +187,7 @@ row: ${row.items}
       expect(data.length, equals(2));
     });
 
-    test("Test (edit)", () async {
+    test("Test (edit) change his age from 20 to 21", () async {
       int userIndex = 1;
       Map<String, dynamic> user = rowsData[userIndex];
 
@@ -214,10 +214,10 @@ userEdited: $userEdited
       expect(userEdited['isAdmin'], equals(user['isAdmin']));
     });
 
-    test("Test (removeColumn)", () async {
-      int countBefore = databaseEngine.countColumnSync();
-      await databaseEngine.removeColumn('age');
-      int countAfter = databaseEngine.countColumnSync();
+    test("Test (removeColumn)", () {
+      int countBefore = databaseEngine.countColumn();
+      databaseEngine.removeColumn('age');
+      int countAfter = databaseEngine.countColumn();
 
       printDebug("""
 countBefore: $countBefore
@@ -231,13 +231,13 @@ countAfter: $countAfter
       int userIndex = 1;
       Map<String, dynamic> user = rowsData[userIndex];
 
-      int countBefore = databaseEngine.countRowSync();
-      await databaseEngine.removeRow(userIndex);
-      int countAfter = databaseEngine.countRowSync();
+      int countBefore = databaseEngine.countRow();
+      databaseEngine.removeRow(userIndex);
+      int countAfter = databaseEngine.countRow();
 
       bool userExists = false;
 
-      await for (RowModel row in databaseEngine.select(
+      await for (RowModel _ in databaseEngine.select(
         items: {'username': user['username']},
       )) {
         userExists = true;
@@ -262,13 +262,13 @@ outputPath: $outputPath
 isExists: $isExists
       """);
 
-      expect(outputPath, equals(addExtension(driveSetup.databasePath)));
+      expect(outputPath, equals(addAESExtension(driveSetup.databasePath)));
       expect(isExists, isTrue);
     });
 
-    test("Test (clear)", () async {
-      await databaseEngine.clear();
-      bool isClear = databaseEngine.countRowSync() == 0;
+    test("Test (clear)", () {
+      databaseEngine.clear();
+      bool isClear = databaseEngine.countRow() == 0;
 
       printDebug("""
 isClear: $isClear
@@ -277,7 +277,7 @@ isClear: $isClear
       expect(isClear, isTrue);
     });
 
-    test("Test (dump)", () async {
+    test("Test (load)", () async {
       // Remove all titles to reset and load
       databaseEngine.removeColumn('username');
       databaseEngine.removeColumn('password');
@@ -285,7 +285,7 @@ isClear: $isClear
       databaseEngine.removeColumn('isAdmin');
 
       bool isLoaded = await databaseEngine.load();
-      int countRow = databaseEngine.countRowSync();
+      int countRow = databaseEngine.countRow();
 
       printDebug("""
 isLoaded: $isLoaded
