@@ -104,22 +104,22 @@ class DriveSetup {
     backupPath = pathlib.join(backupDir, _backupFileName + _backupExtension);
   }
 
-  List<String> create() {
+  Future<List<String>> create() async {
     List<String> result = [];
 
-    Directory(databaseDir).createSync(recursive: true);
+    await Directory(databaseDir).create(recursive: true);
     result.add(databaseDir);
 
-    Directory(tempDir).createSync(recursive: true);
+    await Directory(tempDir).create(recursive: true);
     result.add(tempDir);
 
     if (hasAttachments) {
-      Directory(attachmentDir).createSync(recursive: true);
+      await Directory(attachmentDir).create(recursive: true);
       result.add(attachmentDir);
     }
 
     if (hasBackup) {
-      Directory(backupDir).createSync(recursive: true);
+      await Directory(backupDir).create(recursive: true);
       result.add(backupDir);
     }
 
@@ -127,31 +127,31 @@ class DriveSetup {
     return result;
   }
 
-  List<String> delete({
+  Future<List<String>> delete({
     bool database = true,
     bool temp = true,
     bool attachment = true,
     bool backup = true,
-  }) {
+  }) async {
     List<String> result = [];
 
     if (database) {
-      _removeDir(databaseDir);
+      await _removeDir(databaseDir);
       result.add(databaseDir);
     }
 
     if (temp) {
-      _removeDir(tempDir);
+      await _removeDir(tempDir);
       result.add(tempDir);
     }
 
     if (attachment) {
-      _removeDir(attachmentDir);
+      await _removeDir(attachmentDir);
       result.add(attachmentDir);
     }
 
     if (backup) {
-      _removeDir(backupDir);
+      await _removeDir(backupDir);
       result.add(backupDir);
     }
 
@@ -159,9 +159,9 @@ class DriveSetup {
     return result;
   }
 
-  void _removeDir(String directory) {
+  Future<void> _removeDir(String directory) async {
     try {
-      Directory(directory).deleteSync(recursive: true);
+      await Directory(directory).delete(recursive: true);
     } catch (e) {
       return;
     }
