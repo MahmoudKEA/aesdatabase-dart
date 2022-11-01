@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -16,7 +15,8 @@ mixin BackupCore {
   late List<String> _columns;
   late List<List<dynamic>> _rows;
   late AESCrypto _cipher;
-  late Function _insertSync;
+  late Future<void> Function(
+      {int rowIndex, required Map<String, dynamic> items}) _insert;
 
   void backupInit(
     DriveSetup drive,
@@ -24,14 +24,15 @@ mixin BackupCore {
     List<String> columns,
     List<List<dynamic>> rows,
     AESCrypto cipher,
-    Function insertSync,
+    Future<void> Function({int rowIndex, required Map<String, dynamic> items})
+        insert,
   ) {
     _drive = drive;
     _key = key;
     _columns = columns;
     _rows = rows;
     _cipher = cipher;
-    _insertSync = insertSync;
+    _insert = insert;
   }
 
   Future<void> importBackup({
@@ -41,32 +42,13 @@ mixin BackupCore {
     String? key,
     bool removeAfterComplete = false,
     void Function(int value)? progressCallback,
-  }) {
-    return Future(() {
-      return importBackupSync(
-        path: path,
-        rowIndexes: rowIndexes,
-        attachmentNames: attachmentNames,
-        key: key,
-        removeAfterComplete: removeAfterComplete,
-        progressCallback: progressCallback,
-      );
-    });
-  }
-
-  void importBackupSync({
-    required String path,
-    List<int>? rowIndexes,
-    List<String>? attachmentNames,
-    String? key,
-    bool removeAfterComplete = false,
-    void Function(int value)? progressCallback,
-  }) {
+  }) async {
     tableCreationValidator(_columns);
     backupValidator(_drive.hasBackup);
 
     _cipher.setKey(key ?? _key);
-    String tempPath = _cipher.decryptFileSync(
+
+    final String tempPath = await _cipher.decryptFile(
       path: path,
       directory: _drive.tempDir,
       ignoreFileExists: true,
@@ -74,14 +56,16 @@ mixin BackupCore {
       progressCallback: progressCallback,
     );
 
-    RandomAccessFile tempFile = File(tempPath).openSync(mode: FileMode.read);
+    final RandomAccessFile tempFile = await File(tempPath).open(
+      mode: FileMode.read,
+    );
     int size;
 
     // Read rows
-    size = sizeUnpacked(tempFile.readSync(packedLength));
-    List<List<dynamic>> rows = jsonDecode(
-      utf8.decode(tempFile.readSync(size)),
-    ).cast<List<dynamic>>();
+    size = await sizeUnpacked(await tempFile.read(packedLength));
+    final List<List<dynamic>> rows = await jsonDecodeFromBytes(
+      await tempFile.read(size),
+    ).then((value) => value.cast<List<dynamic>>());
 
     // Import rows
     for (int index = rows.length - 1; index >= 0; index--) {
@@ -90,50 +74,53 @@ mixin BackupCore {
         continue;
       }
 
-      _insertSync(items: {
+      await _insert(items: {
         for (int i = 0; i < _columns.length; i++) _columns[i]: rows[index][i]
       });
     }
 
     // Read attachment files info
-    size = sizeUnpacked(tempFile.readSync(packedLength));
-    Map<String, int> attachmentsInfo = jsonDecode(
-      utf8.decode(tempFile.readSync(size)),
-    ).cast<String, int>();
+    size = await sizeUnpacked(await tempFile.read(packedLength));
+    final Map<String, int> attachmentsInfo = await jsonDecodeFromBytes(
+      await tempFile.read(size),
+    ).then((value) => value.cast<String, int>());
 
     // Import attachment files
-    for (MapEntry<String, int> attachInfo in attachmentsInfo.entries) {
+    for (final MapEntry<String, int> attachInfo in attachmentsInfo.entries) {
       String attachPath = attachInfo.key;
       int attachSize = attachInfo.value;
-      String name = pathlib.dirname(attachPath);
+      final String name = pathlib.dirname(attachPath);
       attachPath = pathlib.join(_drive.attachmentDir, attachPath);
       File attachFile = File(attachPath);
-      bool attachExists = attachFile.existsSync();
+      final bool attachExists = await attachFile.exists();
 
-      void reader({RandomAccessFile? file}) {
+      Future<void> reader({RandomAccessFile? file}) async {
         while (attachSize > 0) {
-          int chunkLenght = min(chunkSize, attachSize);
+          final int chunkLenght = min(chunkSize, attachSize);
           attachSize -= chunkLenght;
-          Uint8List chunk = tempFile.readSync(chunkLenght);
-          file?.writeFromSync(chunk);
+          final Uint8List chunk = await tempFile.read(chunkLenght);
+          await file?.writeFrom(chunk);
         }
       }
 
       if ((attachmentNames != null && !attachmentNames.contains(name)) ||
-          (attachExists && attachFile.statSync().size == attachSize)) {
+          (attachExists &&
+              await attachFile
+                  .stat()
+                  .then((value) => value.size == attachSize))) {
         // ignore all files that are not selected or have no size
-        reader();
+        await reader();
         continue;
       } else if (attachExists) {
-        attachFile = File(pathWithDateSync(attachPath));
+        attachFile = File(pathWithDate(attachPath));
       }
 
-      attachFile.createSync(recursive: true);
-      reader(file: attachFile.openSync(mode: FileMode.writeOnly));
+      await attachFile.create(recursive: true);
+      await reader(file: await attachFile.open(mode: FileMode.writeOnly));
     }
 
-    tempFile.closeSync();
-    File(tempPath).deleteSync();
+    await tempFile.close();
+    await File(tempPath).delete();
   }
 
   Future<String> exportBackup({
@@ -142,102 +129,83 @@ mixin BackupCore {
     String? outputDir,
     String? key,
     void Function(int value)? progressCallback,
-  }) {
-    return Future(() {
-      return exportBackupSync(
-        rowIndexes: rowIndexes,
-        attachmentNames: attachmentNames,
-        outputDir: outputDir,
-        key: key,
-        progressCallback: progressCallback,
-      );
-    });
-  }
-
-  String exportBackupSync({
-    List<int>? rowIndexes,
-    List<String>? attachmentNames,
-    String? outputDir,
-    String? key,
-    void Function(int value)? progressCallback,
-  }) {
+  }) async {
     tableCreationValidator(_columns);
     backupValidator(_drive.hasBackup);
 
     // Rows collection
-    List<List<dynamic>> rows = (rowIndexes == null)
+    final List<List<dynamic>> rows = (rowIndexes == null)
         ? _rows
         : rowIndexes.map((rowIndex) => _rows[rowIndex]).toList();
 
     // Attachments collection
-    Map<String, int> attachmentsInfo = {};
+    final Map<String, int> attachmentsInfo = {};
     if (_drive.hasAttachments) {
-      for (FileSystemEntity attachFile
-          in Directory(_drive.attachmentDir).listSync(recursive: true)) {
-        String name = pathlib.basename(attachFile.parent.path);
+      await for (final FileSystemEntity attachFile
+          in Directory(_drive.attachmentDir).list(recursive: true)) {
+        final String name = pathlib.basename(attachFile.parent.path);
 
-        if ((attachFile.statSync().type == FileSystemEntityType.directory) ||
+        if (await attachFile.stat().then(
+                (value) => value.type == FileSystemEntityType.directory) ||
             (attachmentNames != null && !attachmentNames.contains(name))) {
           continue;
         }
 
         attachmentsInfo.addAll({
           pathlib.relative(attachFile.path, from: _drive.attachmentDir):
-              attachFile.statSync().size
+              await attachFile.stat().then((value) => value.size)
         });
       }
     }
 
     // Create temp file
-    RandomAccessFile tempFile = File(
-      pathlib.join(
+    final RandomAccessFile tempFile = await File(
+      pathWithDate(pathlib.join(
         _drive.tempDir,
         pathlib.relative(_drive.backupPath, from: _drive.backupDir),
-      ),
-    ).openSync(mode: FileMode.writeOnly);
+      )),
+    ).open(mode: FileMode.writeOnly);
     Uint8List data;
 
     // Export rows
-    data = Uint8List.fromList(jsonEncode(rows).codeUnits);
-    tempFile.writeFromSync(sizePacked(data.length));
-    tempFile.writeFromSync(data);
+    data = await jsonEncodeToBytes(rows);
+    await tempFile.writeFrom(await sizePacked(data.length));
+    await tempFile.writeFrom(data);
 
     // Export attachment info
-    data = Uint8List.fromList(jsonEncode(attachmentsInfo).codeUnits);
-    tempFile.writeFromSync(sizePacked(data.length));
-    tempFile.writeFromSync(data);
+    data = await jsonEncodeToBytes(attachmentsInfo);
+    await tempFile.writeFrom(await sizePacked(data.length));
+    await tempFile.writeFrom(data);
 
     // Export attachment files
-    for (String attachPath in attachmentsInfo.keys) {
-      RandomAccessFile attachFile = File(
+    for (final String attachPath in attachmentsInfo.keys) {
+      final RandomAccessFile attachFile = await File(
         pathlib.join(_drive.attachmentDir, attachPath),
-      ).openSync(mode: FileMode.read);
+      ).open(mode: FileMode.read);
 
       while (true) {
-        Uint8List chunk = attachFile.readSync(chunkSize);
+        final Uint8List chunk = await attachFile.read(chunkSize);
         if (chunk.isEmpty) break;
 
-        tempFile.writeFromSync(chunk);
+        await tempFile.writeFrom(chunk);
       }
 
-      attachFile.closeSync();
+      await attachFile.close();
     }
 
-    tempFile.closeSync();
+    await tempFile.close();
 
     outputDir ??= _drive.backupDir;
 
     // Encrypt to output directory
     _cipher.setKey(key ?? _key);
 
-    String outpathPath = _cipher.encryptFileSync(
+    return await _cipher.encryptFile(
       path: tempFile.path,
       directory: outputDir,
       ignoreFileExists: true,
       removeAfterComplete: true,
       progressCallback: progressCallback,
     );
-
-    return File(outpathPath).renameSync(pathWithDateSync(outpathPath)).path;
   }
 }
