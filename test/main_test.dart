@@ -89,7 +89,7 @@ Error: $error
 
       try {
         for (Map<String, dynamic> row in rowsData) {
-          await databaseEngine.insert(
+          databaseEngine.insert(
             rowIndex: databaseEngine.countRow(),
             items: row,
           );
@@ -111,7 +111,7 @@ isDataAdded: $isDataAdded
       Object? error;
 
       try {
-        await databaseEngine.insert(
+        databaseEngine.insert(
           items: {...rowsData.last, 'isAdmin': 'False'},
         );
         isDataAdded = true;
@@ -133,7 +133,7 @@ Error: $error
       Object? error;
 
       try {
-        await databaseEngine.insert(
+        databaseEngine.insert(
           items: rowsData.last.map((key, value) {
             if (key != 'username') return MapEntry(key, value);
             return MapEntry('key', null);
@@ -194,7 +194,7 @@ row: ${row.items}
       int newAge = 21;
       Map<String, dynamic> userEdited = {};
 
-      await databaseEngine.edit(rowIndex: userIndex, items: {'age': newAge});
+      databaseEngine.edit(rowIndex: userIndex, items: {'age': newAge});
 
       await for (RowModel row in databaseEngine.select(
         items: {'username': user['username']},

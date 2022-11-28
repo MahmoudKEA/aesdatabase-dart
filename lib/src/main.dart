@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:aescrypto/aescrypto.dart';
@@ -60,70 +59,36 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     }
   }
 
-  Future<void> insert({
+  void insert({
     int rowIndex = 0,
     required Map<String, dynamic> items,
-  }) async {
+  }) {
     tableCreationValidator(_columns);
 
-    final ReceivePort receivePort = ReceivePort();
+    final List<dynamic> row = _columns.mapIndexed((index, title) {
+      final dynamic item = items[title];
+      item ?? (throw Exception("Please define $title value"));
+      return item;
+    }).toList();
 
-    Isolate.spawn<SendPort>(
-      (sendPort) {
-        try {
-          final List<dynamic> row = _columns.mapIndexed((index, title) {
-            final dynamic item = items[title];
-            item ?? (throw Exception("Please define $title value"));
-            return item;
-          }).toList();
-
-          rowTypeValidator(row, _columns, _rows);
-
-          sendPort.send(row);
-        } catch (e) {
-          sendPort.send(e);
-        }
-      },
-      receivePort.sendPort,
-    );
-
-    final dynamic result = await receivePort.first;
-    if (result is Exception) throw result;
-
-    _rows.insert(rowIndex, result);
+    rowTypeValidator(row, _columns, _rows);
+    _rows.insert(rowIndex, row);
   }
 
-  Future<void> edit({
+  void edit({
     required int rowIndex,
     required Map<String, dynamic> items,
-  }) async {
+  }) {
     tableCreationValidator(_columns);
     rowIndexValidator(rowIndex, _rows);
 
-    final ReceivePort receivePort = ReceivePort();
+    final List<dynamic> row = _columns.mapIndexed((index, title) {
+      final dynamic item = items[title];
+      return item ?? _rows[rowIndex][index];
+    }).toList();
 
-    Isolate.spawn<SendPort>(
-      (sendPort) {
-        try {
-          final List<dynamic> row = _columns.mapIndexed((index, title) {
-            var item = items[title];
-            return item ?? _rows[rowIndex][index];
-          }).toList();
-
-          rowTypeValidator(row, _columns, _rows);
-
-          sendPort.send(row);
-        } catch (e) {
-          sendPort.send(e);
-        }
-      },
-      receivePort.sendPort,
-    );
-
-    final dynamic result = await receivePort.first;
-    if (result is Exception) throw result;
-
-    _rows[rowIndex] = result;
+    rowTypeValidator(row, _columns, _rows);
+    _rows[rowIndex] = row;
   }
 
   void removeColumn(String title) {
@@ -164,25 +129,13 @@ class DatabaseEngine with AttachmentCore, BackupCore {
 
     cipher.setKey(_key);
 
-    final ReceivePort receivePort = ReceivePort();
-
     try {
       final Uint8List data = await cipher.decryptFromFile(
         path: addAESExtension(_drive.databasePath),
         progressCallback: progressCallback,
       );
-
-      Isolate.spawn<SendPort>(
-        (sendPort) async {
-          sendPort.send(
-            await jsonDecodeFromBytes(data),
-          );
-        },
-        receivePort.sendPort,
-      );
-
       _rows.addAll(
-        await receivePort.first.then((value) => value.cast<List<dynamic>>()),
+        jsonDecodeFromBytes(data).cast<List<dynamic>>(),
       );
     } on FileSystemException {
       return false;
@@ -198,26 +151,22 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     _drive.isCreated ? null : await _drive.create();
 
-    final ReceivePort receivePort = ReceivePort();
+    try {
+      _rows.insert(0, _columns);
+      final Uint8List data = jsonEncodeToBytes(_rows);
 
-    Isolate.spawn<SendPort>(
-      (sendPort) async {
-        _rows.insert(0, _columns);
+      cipher.setKey(_key);
 
-        sendPort.send(
-          await jsonEncodeToBytes(_rows),
-        );
-      },
-      receivePort.sendPort,
-    );
-
-    cipher.setKey(_key);
-
-    return await cipher.encryptToFile(
-      data: await receivePort.first,
-      path: _drive.databasePath,
-      ignoreFileExists: true,
-      progressCallback: progressCallback,
-    );
+      return await cipher.encryptToFile(
+        data: data,
+        path: _drive.databasePath,
+        ignoreFileExists: true,
+        progressCallback: progressCallback,
+      );
+    } catch (e) {
+      rethrow;
+    } finally {
+      _rows.removeAt(0);
+    }
   }
 }

@@ -26,9 +26,9 @@ mixin AttachmentCore {
     await for (final FileSystemEntity file in Directory(
       _drive.attachmentDir,
     ).list(recursive: true)) {
-      if (await file
-              .stat()
-              .then((value) => value.type == FileSystemEntityType.directory) ||
+      if (await file.stat().then(
+                (value) => value.type == FileSystemEntityType.directory,
+              ) ||
           (name != null && pathlib.basename(file.parent.path) != name) ||
           (fileName != null &&
               pathlib.basename(file.path) != addAESExtension(fileName))) {

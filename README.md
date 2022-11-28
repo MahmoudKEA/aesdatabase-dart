@@ -44,7 +44,7 @@ await db.load();
 db.createTable(['username', 'password', 'age']);
 
 // Insert new row
-await db.insert(
+db.insert(
     items: {'username': 'user', 'password': '123456', 'age': 20},
 );
 

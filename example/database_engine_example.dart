@@ -17,7 +17,7 @@ void main() async {
   databaseEngine.createTable(['username', 'password', 'age']);
 
   // Insert data, when adding later, it must be of the same type as the first row you added
-  await databaseEngine.insert(
+  databaseEngine.insert(
     items: {'username': 'user', 'password': '123456', 'age': 20},
   );
 
@@ -31,7 +31,7 @@ void main() async {
   }
 
   // Edit row by index
-  await databaseEngine.edit(rowIndex: 0, items: {'age': 21});
+  databaseEngine.edit(rowIndex: 0, items: {'age': 21});
 
   // Remove row by index
   databaseEngine.removeRow(0);

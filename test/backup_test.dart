@@ -38,7 +38,7 @@ void main() {
       databaseEngine.createTable(titles);
 
       for (Map<String, dynamic> row in rowsData) {
-        await databaseEngine.insert(
+        databaseEngine.insert(
           rowIndex: databaseEngine.countRow(),
           items: row,
         );

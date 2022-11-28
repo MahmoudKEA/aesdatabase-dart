@@ -15,8 +15,8 @@ mixin BackupCore {
   late List<String> _columns;
   late List<List<dynamic>> _rows;
   late AESCrypto _cipher;
-  late Future<void> Function(
-      {int rowIndex, required Map<String, dynamic> items}) _insert;
+  late void Function({int rowIndex, required Map<String, dynamic> items})
+      _insert;
 
   void backupInit(
     DriveSetup drive,
@@ -24,8 +24,7 @@ mixin BackupCore {
     List<String> columns,
     List<List<dynamic>> rows,
     AESCrypto cipher,
-    Future<void> Function({int rowIndex, required Map<String, dynamic> items})
-        insert,
+    void Function({int rowIndex, required Map<String, dynamic> items}) insert,
   ) {
     _drive = drive;
     _key = key;
@@ -62,10 +61,10 @@ mixin BackupCore {
     int size;
 
     // Read rows
-    size = await sizeUnpacked(await tempFile.read(packedLength));
-    final List<List<dynamic>> rows = await jsonDecodeFromBytes(
+    size = sizeUnpacked(await tempFile.read(packedLength));
+    final List<List<dynamic>> rows = jsonDecodeFromBytes(
       await tempFile.read(size),
-    ).then((value) => value.cast<List<dynamic>>());
+    ).cast<List<dynamic>>();
 
     // Import rows
     for (int index = rows.length - 1; index >= 0; index--) {
@@ -74,16 +73,16 @@ mixin BackupCore {
         continue;
       }
 
-      await _insert(items: {
+      _insert(items: {
         for (int i = 0; i < _columns.length; i++) _columns[i]: rows[index][i]
       });
     }
 
     // Read attachment files info
-    size = await sizeUnpacked(await tempFile.read(packedLength));
-    final Map<String, int> attachmentsInfo = await jsonDecodeFromBytes(
+    size = sizeUnpacked(await tempFile.read(packedLength));
+    final Map<String, int> attachmentsInfo = jsonDecodeFromBytes(
       await tempFile.read(size),
-    ).then((value) => value.cast<String, int>());
+    ).cast<String, int>();
 
     // Import attachment files
     for (final MapEntry<String, int> attachInfo in attachmentsInfo.entries) {
@@ -168,13 +167,13 @@ mixin BackupCore {
     Uint8List data;
 
     // Export rows
-    data = await jsonEncodeToBytes(rows);
-    await tempFile.writeFrom(await sizePacked(data.length));
+    data = jsonEncodeToBytes(rows);
+    await tempFile.writeFrom(sizePacked(data.length));
     await tempFile.writeFrom(data);
 
     // Export attachment info
-    data = await jsonEncodeToBytes(attachmentsInfo);
-    await tempFile.writeFrom(await sizePacked(data.length));
+    data = jsonEncodeToBytes(attachmentsInfo);
+    await tempFile.writeFrom(sizePacked(data.length));
     await tempFile.writeFrom(data);
 
     // Export attachment files
