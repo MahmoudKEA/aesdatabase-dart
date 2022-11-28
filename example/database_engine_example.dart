@@ -16,9 +16,9 @@ void main() async {
   // Create table
   databaseEngine.createTable(['username', 'password', 'age']);
 
-  // Insert data, when adding later, it must be of the same type as the first row you added
-  databaseEngine.insert(
-    items: {'username': 'user', 'password': '123456', 'age': 20},
+  // Add row, when adding later, it must be of the same type as the first row you added
+  databaseEngine.addRow(
+    {'username': 'user', 'password': '123456', 'age': 20},
   );
 
   // Select data, don't set args for all data / set specific args for filtering

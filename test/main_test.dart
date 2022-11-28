@@ -84,15 +84,12 @@ Error: $error
       expect(isTableCreated, isFalse);
     });
 
-    test("Test (insert)", () async {
+    test("Test (addRow)", () async {
       bool isDataAdded;
 
       try {
         for (Map<String, dynamic> row in rowsData) {
-          databaseEngine.insert(
-            rowIndex: databaseEngine.countRow(),
-            items: row,
-          );
+          databaseEngine.addRow(row);
         }
         isDataAdded = true;
       } catch (e) {
@@ -106,14 +103,12 @@ isDataAdded: $isDataAdded
       expect(isDataAdded, isTrue);
     });
 
-    test("Test (insert) with different data type", () async {
+    test("Test (addRow) with different data type", () async {
       bool isDataAdded;
       Object? error;
 
       try {
-        databaseEngine.insert(
-          items: {...rowsData.last, 'isAdmin': 'False'},
-        );
+        databaseEngine.addRow({...rowsData.last, 'isAdmin': 'False'});
         isDataAdded = true;
       } catch (e) {
         error = e;
@@ -128,13 +123,13 @@ Error: $error
       expect(isDataAdded, isFalse);
     });
 
-    test("Test (insert) without a column", () async {
+    test("Test (addRow) without a column", () async {
       bool isDataAdded;
       Object? error;
 
       try {
-        databaseEngine.insert(
-          items: rowsData.last.map((key, value) {
+        databaseEngine.addRow(
+          rowsData.last.map((key, value) {
             if (key != 'username') return MapEntry(key, value);
             return MapEntry('key', null);
           }),

@@ -15,8 +15,7 @@ mixin BackupCore {
   late List<String> _columns;
   late List<List<dynamic>> _rows;
   late AESCrypto _cipher;
-  late void Function({int rowIndex, required Map<String, dynamic> items})
-      _insert;
+  late void Function(Map<String, dynamic> items) _addRow;
 
   void backupInit(
     DriveSetup drive,
@@ -24,14 +23,14 @@ mixin BackupCore {
     List<String> columns,
     List<List<dynamic>> rows,
     AESCrypto cipher,
-    void Function({int rowIndex, required Map<String, dynamic> items}) insert,
+    void Function(Map<String, dynamic> items) addRow,
   ) {
     _drive = drive;
     _key = key;
     _columns = columns;
     _rows = rows;
     _cipher = cipher;
-    _insert = insert;
+    _addRow = addRow;
   }
 
   Future<void> importBackup({
@@ -67,13 +66,13 @@ mixin BackupCore {
     ).cast<List<dynamic>>();
 
     // Import rows
-    for (int index = rows.length - 1; index >= 0; index--) {
+    for (int index = 0; index < rows.length; index++) {
       if (_rows.containsList(rows[index]) ||
           (rowIndexes != null && !rowIndexes.contains(index))) {
         continue;
       }
 
-      _insert(items: {
+      _addRow({
         for (int i = 0; i < _columns.length; i++) _columns[i]: rows[index][i]
       });
     }

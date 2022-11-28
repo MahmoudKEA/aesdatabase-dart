@@ -11,7 +11,7 @@ import 'models.dart';
 class DatabaseEngine with AttachmentCore, BackupCore {
   DatabaseEngine(this._drive, this._key) {
     attachmentInit(_drive, _key, cipher);
-    backupInit(_drive, _key, _columns, _rows, cipher, insert);
+    backupInit(_drive, _key, _columns, _rows, cipher, addRow);
   }
 
   final DriveSetup _drive;
@@ -59,10 +59,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     }
   }
 
-  void insert({
-    int rowIndex = 0,
-    required Map<String, dynamic> items,
-  }) {
+  void addRow(Map<String, dynamic> items) {
     tableCreationValidator(_columns);
 
     final List<dynamic> row = _columns.mapIndexed((index, title) {
@@ -72,7 +69,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     }).toList();
 
     rowTypeValidator(row, _columns, _rows);
-    _rows.insert(rowIndex, row);
+    _rows.add(row);
   }
 
   void edit({
@@ -141,7 +138,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       return false;
     }
 
-    final List<String> columnTitles = _rows.removeAt(0).cast<String>();
+    final List<String> columnTitles = _rows.removeLast().cast<String>();
     createTable(columnTitles);
 
     return true;
@@ -152,7 +149,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     _drive.isCreated ? null : await _drive.create();
 
     try {
-      _rows.insert(0, _columns);
+      _rows.add(_columns);
       final Uint8List data = jsonEncodeToBytes(_rows);
 
       cipher.setKey(_key);
@@ -166,7 +163,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     } catch (e) {
       rethrow;
     } finally {
-      _rows.removeAt(0);
+      _rows.removeLast();
     }
   }
 }

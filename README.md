@@ -43,9 +43,9 @@ await db.load();
 // Or create a table if this is the first time
 db.createTable(['username', 'password', 'age']);
 
-// Insert new row
-db.insert(
-    items: {'username': 'user', 'password': '123456', 'age': 20},
+// Add new row
+db.addRow(
+    {'username': 'user', 'password': '123456', 'age': 20},
 );
 
 // Save changes

@@ -38,10 +38,7 @@ void main() {
       databaseEngine.createTable(titles);
 
       for (Map<String, dynamic> row in rowsData) {
-        databaseEngine.insert(
-          rowIndex: databaseEngine.countRow(),
-          items: row,
-        );
+        databaseEngine.addRow(row);
       }
 
       if (!await File(attachFilePath).exists()) {
