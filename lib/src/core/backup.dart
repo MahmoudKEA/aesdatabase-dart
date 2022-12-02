@@ -198,7 +198,7 @@ mixin BackupCore {
     // Encrypt to output directory
     _cipher.setKey(key ?? _key);
 
-    return await _cipher.encryptFile(
+    return _cipher.encryptFile(
       path: tempFile.path,
       directory: outputDir,
       ignoreFileExists: true,

@@ -10,7 +10,9 @@ Uint8List sizePacked(int size, {bool reversed = true}) {
 }
 
 int sizeUnpacked(Uint8List bytes, {bool reversed = true}) {
-  if (reversed) bytes = Uint8List.fromList(bytes.reversed.toList());
+  if (reversed) {
+    bytes = Uint8List.fromList(bytes.reversed.toList());
+  }
 
   return bytes.buffer.asByteData().getInt64(0);
 }

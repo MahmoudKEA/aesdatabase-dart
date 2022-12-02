@@ -154,7 +154,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
 
       cipher.setKey(_key);
 
-      return await cipher.encryptToFile(
+      return cipher.encryptToFile(
         data: data,
         path: _drive.databasePath,
         ignoreFileExists: true,

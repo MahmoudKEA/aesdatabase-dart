@@ -1,6 +1,6 @@
 name: aesdatabase
 description: A starting point for Dart libraries or applications.
-version: 2.1.0
+version: 2.3.0
 homepage: https://github.com/MahmoudKhalid
 repository: https://github.com/MahmoudKhalid/aesdatabase-dart
 issue_tracker: https://github.com/MahmoudKhalid/aesdatabase-dart/issues
@@ -9,9 +9,8 @@ platforms:
   ios:
   linux:
   macos:
-  web:
   windows:
-publish_to: https://pub.dev/
+publish_to: none
 
 environment:
   sdk: '>=2.18.0 <3.0.0'

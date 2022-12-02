@@ -50,7 +50,7 @@ mixin AttachmentCore {
 
     _cipher.setKey(_key);
 
-    return await _cipher.encryptFile(
+    return _cipher.encryptFile(
       path: path,
       directory: directory,
       ignoreFileExists: ignoreFileExists,
@@ -74,7 +74,7 @@ mixin AttachmentCore {
 
     _cipher.setKey(_key);
 
-    return await _cipher.decryptFile(
+    return _cipher.decryptFile(
       path: path,
       directory: outputDir,
       ignoreFileExists: ignoreFileExists,
@@ -111,6 +111,6 @@ mixin AttachmentCore {
       pathlib.join(_drive.attachmentDir, name, fileName),
     );
 
-    return await File(path).exists();
+    return File(path).exists();
   }
 }

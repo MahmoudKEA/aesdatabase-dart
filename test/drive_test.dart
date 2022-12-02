@@ -28,7 +28,8 @@ void main() {
       String backupDir = pathlib.join('.', 'backup');
       String backupPath = pathlib.join(backupDir, 'database.backup');
 
-      printDebug("""
+      printDebug(
+          """
 hasAttachments: ${driveSetup.hasAttachments}
 hasBackup: ${driveSetup.hasBackup}
 isCreated: ${driveSetup.isCreated}
@@ -80,7 +81,8 @@ attachmentDir: ${driveSetup.attachmentDir}
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.databaseUpdate(main: mainDir, folder: folderName);
 
-      printDebug("""
+      printDebug(
+          """
 databaseDir: ${driveSetup.databaseDir}
 databasePath: ${driveSetup.databasePath}
       """);
@@ -94,7 +96,8 @@ databasePath: ${driveSetup.databasePath}
       String directory = pathlib.join(mainDir, folderName);
       driveSetup.backupUpdate(main: mainDir, folder: folderName);
 
-      printDebug("""
+      printDebug(
+          """
 backupDir: ${driveSetup.backupDir}
 backupPath: ${driveSetup.backupPath}
       """);
