@@ -275,12 +275,6 @@ isClear: $isClear
     });
 
     test("Test (load)", () async {
-      // Remove all titles to reset and load
-      databaseEngine.removeColumn('username');
-      databaseEngine.removeColumn('password');
-      databaseEngine.removeColumn('gender');
-      databaseEngine.removeColumn('isAdmin');
-
       bool isLoaded = await databaseEngine.load();
       int countRow = databaseEngine.countRow();
 

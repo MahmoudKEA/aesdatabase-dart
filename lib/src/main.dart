@@ -122,6 +122,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
   }
 
   Future<bool> load({void Function(int value)? progressCallback}) async {
+    tableCreationValidator(_columns);
     _drive.isCreated ? null : await _drive.create();
 
     cipher.setKey(_key);
@@ -131,15 +132,14 @@ class DatabaseEngine with AttachmentCore, BackupCore {
         path: addAESExtension(_drive.databasePath),
         progressCallback: progressCallback,
       );
-      _rows.addAll(
-        jsonDecodeFromBytes(data).cast<List<dynamic>>(),
-      );
+      final List<List<dynamic>> rows =
+          jsonDecodeFromBytes(data).cast<List<dynamic>>();
+      tableLengthValidator(_columns.length, rows[0].length);
+
+      _rows.addAll(rows);
     } on FileSystemException {
       return false;
     }
-
-    final List<String> columnTitles = _rows.removeLast().cast<String>();
-    createTable(columnTitles);
 
     return true;
   }
@@ -148,22 +148,13 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     _drive.isCreated ? null : await _drive.create();
 
-    try {
-      _rows.add(_columns);
-      final Uint8List data = jsonEncodeToBytes(_rows);
+    cipher.setKey(_key);
 
-      cipher.setKey(_key);
-
-      return cipher.encryptToFile(
-        data: data,
-        path: _drive.databasePath,
-        ignoreFileExists: true,
-        progressCallback: progressCallback,
-      );
-    } catch (e) {
-      rethrow;
-    } finally {
-      _rows.removeLast();
-    }
+    return cipher.encryptToFile(
+      data: jsonEncodeToBytes(_rows),
+      path: _drive.databasePath,
+      ignoreFileExists: true,
+      progressCallback: progressCallback,
+    );
   }
 }

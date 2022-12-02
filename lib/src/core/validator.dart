@@ -4,6 +4,14 @@ void tableCreationValidator(List<String> columnTitles) {
   }
 }
 
+void tableLengthValidator(int columnLength, int rowLength) {
+  if (columnLength != rowLength) {
+    throw Exception(
+      "$columnLength Column and $rowLength row lengths does not match",
+    );
+  }
+}
+
 void rowIndexValidator(int rowIndex, List<dynamic> rows) {
   try {
     rows[rowIndex];
