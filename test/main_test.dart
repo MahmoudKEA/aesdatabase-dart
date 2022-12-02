@@ -149,7 +149,7 @@ Error: $error
     });
 
     test("Test (select) all rows", () async {
-      await for (RowModel row in databaseEngine.select()) {
+      await for (DBRow row in databaseEngine.select()) {
         printDebug("""
 index: ${row.index}
 row: ${row.items}
@@ -162,7 +162,7 @@ row: ${row.items}
     test("Test (select) get username/age/gender of all females", () async {
       List<Map<String, dynamic>> data = [];
 
-      await for (RowModel row in databaseEngine.select(
+      await for (DBRow row in databaseEngine.select(
         columnTitles: ['username', 'age', 'gender'],
         items: {'gender': 'female'},
       )) {
@@ -191,7 +191,7 @@ row: ${row.items}
 
       databaseEngine.edit(rowIndex: userIndex, items: {'age': newAge});
 
-      await for (RowModel row in databaseEngine.select(
+      await for (DBRow row in databaseEngine.select(
         items: {'username': user['username']},
       )) {
         userEdited.addAll(row.items);
@@ -233,7 +233,7 @@ countAfter: $countAfter
 
       bool userExists = false;
 
-      await for (RowModel _ in databaseEngine.select(
+      await for (DBRow _ in databaseEngine.select(
         items: {'username': user['username']},
       )) {
         userExists = true;

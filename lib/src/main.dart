@@ -34,7 +34,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     _columns.addAll(columnTitles);
   }
 
-  Stream<RowModel> select({
+  Stream<DBRow> select({
     List<String>? columnTitles,
     Map<String, dynamic>? items,
   }) async* {
@@ -55,7 +55,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
         continue;
       }
 
-      yield RowModel(index, result);
+      yield DBRow(index, result);
     }
   }
 

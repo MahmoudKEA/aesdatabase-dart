@@ -22,7 +22,7 @@ void main() async {
   );
 
   // Select data, don't set args for all data / set specific args for filtering
-  await for (RowModel row in databaseEngine.select(
+  await for (DBRow row in databaseEngine.select(
     columnTitles: ['username', 'age'],
     items: {'age': 20},
   )) {

@@ -93,7 +93,7 @@ countRow: $countRow
 isAttachExists: $isAttachExists
       """);
 
-      await for (RowModel row in databaseEngine.select()) {
+      await for (DBRow row in databaseEngine.select()) {
         expect(row.items, equals(rowsData[row.index]));
       }
       expect(countRow, equals(rowsData.length));
