@@ -123,7 +123,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
 
   Future<bool> load({void Function(int value)? progressCallback}) async {
     tableCreationValidator(_columns);
-    _drive.isCreated ? null : await _drive.create();
+    if (!_drive.isCreated) await _drive.create();
 
     cipher.setKey(_key);
 
@@ -146,7 +146,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
 
   Future<String> dump({void Function(int value)? progressCallback}) async {
     tableCreationValidator(_columns);
-    _drive.isCreated ? null : await _drive.create();
+    if (!_drive.isCreated) await _drive.create();
 
     cipher.setKey(_key);
 

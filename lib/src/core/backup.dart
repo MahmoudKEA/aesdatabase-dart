@@ -103,9 +103,9 @@ mixin BackupCore {
 
       if ((attachmentNames != null && !attachmentNames.contains(name)) ||
           (attachExists &&
-              await attachFile
-                  .stat()
-                  .then((value) => value.size == attachSize))) {
+              await attachFile.stat().then(
+                    (value) => value.size == attachSize,
+                  ))) {
         // ignore all files that are not selected or have no size
         await reader();
         continue;
