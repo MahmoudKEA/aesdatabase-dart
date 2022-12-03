@@ -134,7 +134,10 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       );
       final List<List<dynamic>> rows =
           jsonDecodeFromBytes(data).cast<List<dynamic>>();
-      tableLengthValidator(_columns.length, rows[0].length);
+
+      if (rows.isNotEmpty) {
+        tableLengthValidator(_columns.length, rows[0].length);
+      }
 
       _rows.addAll(rows);
     } on FileSystemException {
