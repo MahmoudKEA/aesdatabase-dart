@@ -9,7 +9,7 @@ String pathWithDate(String path) {
   final List<String> basename = pathlib.basename(path).split('.');
   basename[0] = '${basename[0]} $date';
 
-  return pathlib.prettyUri(
+  return Uri.file(
     pathlib.join(dirname, basename.join('.')),
-  );
+  ).toFilePath();
 }

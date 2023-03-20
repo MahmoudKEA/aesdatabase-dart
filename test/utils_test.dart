@@ -9,7 +9,7 @@ void printDebug(String message) {
 
 void main() {
   group("Utils Group:", () {
-    const String path = 'folder/file/data.txt';
+    const String path = r'c:\folder/file/data.txt';
 
     test("Test (pathWithDate)", () async {
       String result = pathWithDate(path);
@@ -20,7 +20,7 @@ pathWithDate: $result
 
       expect(
         result,
-        contains(pathlib.prettyUri(pathlib.dirname(path))),
+        contains(Uri.file(pathlib.dirname(path)).toFilePath()),
       );
     });
   });
