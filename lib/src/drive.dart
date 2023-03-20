@@ -16,13 +16,13 @@ class DriveSetup {
       main: '.',
       folder: 'database',
       file: 'database',
-      extension: '.db',
+      extensionFile: '.db',
     );
     backupUpdate(
       main: '.',
       folder: 'backup',
       file: 'database',
-      extension: '.backup',
+      extensionFile: '.backup',
     );
   }
 
@@ -79,12 +79,12 @@ class DriveSetup {
     String? main,
     String? folder,
     String? file,
-    String? extension,
+    String? extensionFile,
   }) {
     main ??= pathlib.dirname(_databaseDir);
     _databaseFolderName = folder ?? _databaseFolderName;
     _databaseFileName = file ?? _databaseFileName;
-    _databaseExtension = extension ?? _databaseExtension;
+    _databaseExtension = extensionFile ?? _databaseExtension;
 
     bool hasSubAttachment;
     try {
@@ -108,12 +108,12 @@ class DriveSetup {
     String? main,
     String? folder,
     String? file,
-    String? extension,
+    String? extensionFile,
   }) {
     main ??= pathlib.dirname(_backupDir);
     _backupFolderName = folder ?? _backupFolderName;
     _backupFileName = file ?? _backupFileName;
-    _backupExtension = extension ?? _backupExtension;
+    _backupExtension = extensionFile ?? _backupExtension;
     _backupDir = pathlib.join(main, _backupFolderName);
     _backupPath = pathlib.join(_backupDir, _backupFileName + _backupExtension);
   }

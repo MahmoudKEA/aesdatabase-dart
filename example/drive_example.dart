@@ -32,7 +32,7 @@ void main() async {
     main: 'newMainDir',
     folder: 'newFolderName',
     file: 'newFileName',
-    extension: 'newExtension',
+    extensionFile: 'newExtension',
   );
 
   // Backup section
@@ -42,6 +42,6 @@ void main() async {
     main: 'newMainDir',
     folder: 'newFolderName',
     file: 'newFileName',
-    extension: 'newExtension',
+    extensionFile: 'newExtension',
   );
 }

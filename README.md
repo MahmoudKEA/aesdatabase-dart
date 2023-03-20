@@ -93,7 +93,7 @@ String outputPath = await db.exportAttachment(
     progressCallback: (value) => print('progressing: $value'),
 );
 
-// ChecCheck example/database_engine_example.dart for more examples
+// Check example/database_engine_example.dart for more examples
 // ...
 ```
 
@@ -139,6 +139,6 @@ await db.importBackup(
     progressCallback: (value) => print('progressing: $value'),
 );
 
-// ChecCheck example/database_engine_example.dart for more examples
+// Check example/database_engine_example.dart for more examples
 // ...
 ```
