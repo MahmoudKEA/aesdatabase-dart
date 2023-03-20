@@ -39,7 +39,7 @@ void main() async {
   // Remove column by title
   databaseEngine.removeColumn('age');
 
-  // Get coulmns count
+  // Get columns count
   databaseEngine.countColumn();
 
   // Get rows count

@@ -94,9 +94,9 @@ mixin BackupCore {
 
       Future<void> reader({RandomAccessFile? file}) async {
         while (attachSize > 0) {
-          final int chunkLenght = min(chunkSize, attachSize);
-          attachSize -= chunkLenght;
-          final Uint8List chunk = await tempFile.read(chunkLenght);
+          final int chunkLength = min(chunkSize, attachSize);
+          attachSize -= chunkLength;
+          final Uint8List chunk = await tempFile.read(chunkLength);
           await file?.writeFrom(chunk);
         }
       }
