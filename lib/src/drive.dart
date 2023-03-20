@@ -29,36 +29,50 @@ class DriveSetup {
   final bool hasAttachments;
   final bool hasBackup;
 
-  bool isCreated = false;
+  bool _isCreated = false;
 
   late String _tempFolderName;
-  late String tempDir;
+  late String _tempDir;
 
   late String _attachmentFolderName;
-  late String attachmentDir;
+  late String _attachmentDir;
 
   late String _databaseFolderName;
   late String _databaseFileName;
   late String _databaseExtension;
-  late String databaseDir;
-  late String databasePath;
+  late String _databaseDir;
+  late String _databasePath;
 
   late String _backupFolderName;
   late String _backupFileName;
   late String _backupExtension;
-  late String backupDir;
-  late String backupPath;
+  late String _backupDir;
+  late String _backupPath;
+
+  bool get isCreated => _isCreated;
+
+  String get tempDir => _tempDir;
+
+  String get attachmentDir => _attachmentDir;
+
+  String get databaseDir => _databaseDir;
+
+  String get databasePath => _databasePath;
+
+  String get backupDir => _backupDir;
+
+  String get backupPath => _backupPath;
 
   void tempUpdate({String? main, String? folder}) {
-    main ??= pathlib.dirname(tempDir);
+    main ??= pathlib.dirname(_tempDir);
     _tempFolderName = folder ?? _tempFolderName;
-    tempDir = pathlib.join(main, _tempFolderName);
+    _tempDir = pathlib.join(main, _tempFolderName);
   }
 
   void attachmentUpdate({String? main, String? folder}) {
-    main ??= pathlib.dirname(attachmentDir);
+    main ??= pathlib.dirname(_attachmentDir);
     _attachmentFolderName = folder ?? _attachmentFolderName;
-    attachmentDir = pathlib.join(main, _attachmentFolderName);
+    _attachmentDir = pathlib.join(main, _attachmentFolderName);
   }
 
   void databaseUpdate({
@@ -67,26 +81,26 @@ class DriveSetup {
     String? file,
     String? extension,
   }) {
-    main ??= pathlib.dirname(databaseDir);
+    main ??= pathlib.dirname(_databaseDir);
     _databaseFolderName = folder ?? _databaseFolderName;
     _databaseFileName = file ?? _databaseFileName;
     _databaseExtension = extension ?? _databaseExtension;
 
     bool hasSubAttachment;
     try {
-      hasSubAttachment = (databaseDir == pathlib.dirname(attachmentDir));
+      hasSubAttachment = (_databaseDir == pathlib.dirname(_attachmentDir));
     } catch (e) {
       hasSubAttachment = false;
     }
 
-    databaseDir = pathlib.join(main, _databaseFolderName);
-    databasePath = pathlib.join(
-      databaseDir,
+    _databaseDir = pathlib.join(main, _databaseFolderName);
+    _databasePath = pathlib.join(
+      _databaseDir,
       _databaseFileName + _databaseExtension,
     );
 
     if (hasSubAttachment) {
-      attachmentUpdate(main: databaseDir);
+      attachmentUpdate(main: _databaseDir);
     }
   }
 
@@ -96,34 +110,34 @@ class DriveSetup {
     String? file,
     String? extension,
   }) {
-    main ??= pathlib.dirname(backupDir);
+    main ??= pathlib.dirname(_backupDir);
     _backupFolderName = folder ?? _backupFolderName;
     _backupFileName = file ?? _backupFileName;
     _backupExtension = extension ?? _backupExtension;
-    backupDir = pathlib.join(main, _backupFolderName);
-    backupPath = pathlib.join(backupDir, _backupFileName + _backupExtension);
+    _backupDir = pathlib.join(main, _backupFolderName);
+    _backupPath = pathlib.join(_backupDir, _backupFileName + _backupExtension);
   }
 
   Future<List<String>> create() async {
     List<String> result = [];
 
-    await Directory(databaseDir).create(recursive: true);
-    result.add(databaseDir);
+    await Directory(_databaseDir).create(recursive: true);
+    result.add(_databaseDir);
 
-    await Directory(tempDir).create(recursive: true);
-    result.add(tempDir);
+    await Directory(_tempDir).create(recursive: true);
+    result.add(_tempDir);
 
     if (hasAttachments) {
-      await Directory(attachmentDir).create(recursive: true);
-      result.add(attachmentDir);
+      await Directory(_attachmentDir).create(recursive: true);
+      result.add(_attachmentDir);
     }
 
     if (hasBackup) {
-      await Directory(backupDir).create(recursive: true);
-      result.add(backupDir);
+      await Directory(_backupDir).create(recursive: true);
+      result.add(_backupDir);
     }
 
-    isCreated = true;
+    _isCreated = true;
     return result;
   }
 
@@ -136,26 +150,26 @@ class DriveSetup {
     List<String> result = [];
 
     if (database) {
-      await _removeDir(databaseDir);
-      result.add(databaseDir);
+      await _removeDir(_databaseDir);
+      result.add(_databaseDir);
     }
 
     if (temp) {
-      await _removeDir(tempDir);
-      result.add(tempDir);
+      await _removeDir(_tempDir);
+      result.add(_tempDir);
     }
 
     if (attachment) {
-      await _removeDir(attachmentDir);
-      result.add(attachmentDir);
+      await _removeDir(_attachmentDir);
+      result.add(_attachmentDir);
     }
 
     if (backup) {
-      await _removeDir(backupDir);
-      result.add(backupDir);
+      await _removeDir(_backupDir);
+      result.add(_backupDir);
     }
 
-    isCreated = false;
+    _isCreated = false;
     return result;
   }
 
