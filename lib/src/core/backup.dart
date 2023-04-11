@@ -11,7 +11,6 @@ import 'core.dart';
 
 mixin BackupCore {
   late DriveSetup _drive;
-  late String _key;
   late List<String> _columns;
   late List<List<dynamic>> _rows;
   late AESCrypto _cipher;
@@ -19,14 +18,12 @@ mixin BackupCore {
 
   void backupInit(
     DriveSetup drive,
-    String key,
     List<String> columns,
     List<List<dynamic>> rows,
     AESCrypto cipher,
     void Function(Map<String, dynamic> items) addRow,
   ) {
     _drive = drive;
-    _key = key;
     _columns = columns;
     _rows = rows;
     _cipher = cipher;
@@ -44,9 +41,12 @@ mixin BackupCore {
     tableCreationValidator(_columns);
     backupValidator(_drive.hasBackup);
 
-    _cipher.setKey(key ?? _key);
+    AESCrypto cipher = _cipher;
+    if (key != null) {
+      cipher = AESCrypto(key: key);
+    }
 
-    final String tempPath = await _cipher.decryptFile(
+    final String tempPath = await cipher.decryptFile(
       path: path,
       directory: _drive.tempDir,
       ignoreFileExists: true,
@@ -195,10 +195,13 @@ mixin BackupCore {
 
     outputDir ??= _drive.backupDir;
 
-    // Encrypt to output directory
-    _cipher.setKey(key ?? _key);
+    AESCrypto cipher = _cipher;
+    if (key != null) {
+      cipher = AESCrypto(key: key);
+    }
 
-    return _cipher.encryptFile(
+    // Encrypt to output directory
+    return cipher.encryptFile(
       path: tempFile.path,
       directory: outputDir,
       ignoreFileExists: true,

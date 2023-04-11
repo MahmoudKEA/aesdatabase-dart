@@ -9,16 +9,17 @@ import 'drive.dart';
 import 'models.dart';
 
 class DatabaseEngine with AttachmentCore, BackupCore {
-  DatabaseEngine(this._drive, this._key) {
-    attachmentInit(_drive, _key, cipher);
-    backupInit(_drive, _key, _columns, _rows, cipher, addRow);
+  DatabaseEngine(this._drive, {required String key}) {
+    _cipher = AESCrypto(key: key);
+
+    attachmentInit(_drive, _cipher);
+    backupInit(_drive, _columns, _rows, _cipher, addRow);
   }
 
   final DriveSetup _drive;
-  final String _key;
   final List<String> _columns = [];
   final List<List<dynamic>> _rows = [];
-  final AESCrypto cipher = AESCrypto(key: "");
+  late AESCrypto _cipher;
 
   void createTable(List<String> columnTitles) {
     if (_columns.isNotEmpty) {
@@ -125,10 +126,8 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
 
-    cipher.setKey(_key);
-
     try {
-      final Uint8List data = await cipher.decryptFromFile(
+      final Uint8List data = await _cipher.decryptFromFile(
         path: addAESExtension(_drive.databasePath),
         progressCallback: progressCallback,
       );
@@ -151,9 +150,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
 
-    cipher.setKey(_key);
-
-    return cipher.encryptToFile(
+    return _cipher.encryptToFile(
       data: jsonEncodeToBytes(_rows),
       path: _drive.databasePath,
       ignoreFileExists: true,

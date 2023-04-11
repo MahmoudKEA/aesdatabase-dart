@@ -8,12 +8,10 @@ import 'core.dart';
 
 mixin AttachmentCore {
   late DriveSetup _drive;
-  late String _key;
   late AESCrypto _cipher;
 
-  void attachmentInit(DriveSetup drive, String key, AESCrypto cipher) {
+  void attachmentInit(DriveSetup drive, AESCrypto cipher) {
     _drive = drive;
-    _key = key;
     _cipher = cipher;
   }
 
@@ -48,8 +46,6 @@ mixin AttachmentCore {
     attachmentValidator(_drive.hasAttachments);
     final String directory = pathlib.join(_drive.attachmentDir, name);
 
-    _cipher.setKey(_key);
-
     return _cipher.encryptFile(
       path: path,
       directory: directory,
@@ -71,8 +67,6 @@ mixin AttachmentCore {
     );
 
     outputDir ??= _drive.tempDir;
-
-    _cipher.setKey(_key);
 
     return _cipher.decryptFile(
       path: path,
