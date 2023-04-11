@@ -35,7 +35,7 @@ final DriveSetup driveSetup = DriveSetup(
 await driveSetup.create();
 
 // Connect with database engine
-final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
+final DatabaseEngine db = DatabaseEngine(driveSetup, key: "passwordKey");
 
 // Load database if it's already created before
 await db.load();
@@ -64,7 +64,7 @@ final DriveSetup driveSetup = DriveSetup(hasAttachments: true);
 await driveSetup.create();
 
 // Connect with database engine
-final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
+final DatabaseEngine db = DatabaseEngine(driveSetup, key: "passwordKey");
 
 // Save file attachment into database as encrypted with AES extension
 // [name]: It is the name of a folder to collect some files in one folder
@@ -106,7 +106,7 @@ final DriveSetup driveSetup = DriveSetup(hasBackup: true);
 await driveSetup.create();
 
 // Connect with database engine
-final DatabaseEngine db = DatabaseEngine(driveSetup, "passwordKey");
+final DatabaseEngine db = DatabaseEngine(driveSetup, key: "passwordKey");
 
 
 // Export a backup of all ur database
