@@ -17,7 +17,7 @@ void main() {
 
     final DatabaseEngine databaseEngine = DatabaseEngine(
       driveSetup,
-      "passwordKey",
+      key: "passwordKey",
     );
 
     final List<String> titles = getTitlesDataTest();
@@ -214,8 +214,7 @@ userEdited: $userEdited
       databaseEngine.removeColumn('age');
       int countAfter = databaseEngine.countColumn();
 
-      printDebug(
-          """
+      printDebug("""
 countBefore: $countBefore
 countAfter: $countAfter
       """);
@@ -239,8 +238,7 @@ countAfter: $countAfter
         userExists = true;
       }
 
-      printDebug(
-          """
+      printDebug("""
 countBefore: $countBefore
 countAfter: $countAfter
 userExists: $userExists

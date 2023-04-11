@@ -16,7 +16,7 @@ void main() {
 
     final DatabaseEngine databaseEngine = DatabaseEngine(
       driveSetup,
-      "passwordKey",
+      key: "passwordKey",
     );
 
     String name = 'mydata';
@@ -81,8 +81,7 @@ file: $file
       );
       bool isExists = await File(outputPath).exists();
 
-      printDebug(
-          """
+      printDebug("""
 outputPath: $outputPath
 fileSHA256: $fileSHA256
 isExists: $isExists
