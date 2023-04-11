@@ -10,7 +10,7 @@ void main() async {
 
   final DatabaseEngine databaseEngine = DatabaseEngine(
     driveSetup,
-    "passwordKey",
+    key: "passwordKey",
   );
 
   // Create table
