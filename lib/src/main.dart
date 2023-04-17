@@ -122,6 +122,10 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     return _rows.length;
   }
 
+  void setKey(String key) {
+    _cipher.setKey(key);
+  }
+
   Future<bool> load({void Function(int value)? progressCallback}) async {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
