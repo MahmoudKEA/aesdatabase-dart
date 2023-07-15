@@ -48,7 +48,7 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       final Map<String, dynamic> result = {};
 
       _columns.forEachIndexed((i, title) {
-        columnTitles!.contains(title) ? result.addAll({title: row[i]}) : null;
+        if (columnTitles!.contains(title)) result[title] = row[i];
       });
 
       if (items != null &&
@@ -56,17 +56,15 @@ class DatabaseEngine with AttachmentCore, BackupCore {
         continue;
       }
 
-      yield DBRow(index, result);
+      yield DBRow(items: result, indexQueryCallback: indexQuery);
     }
   }
 
   void addRow(Map<String, dynamic> items) {
     tableCreationValidator(_columns);
 
-    final List<dynamic> row = _columns.mapIndexed((index, title) {
-      final dynamic item = items[title];
-      item ?? (throw Exception("Please define $title value"));
-      return item;
+    final List<dynamic> row = _columns.map((title) {
+      return items[title] ?? (throw Exception("Please define $title value"));
     }).toList();
 
     rowTypeValidator(row, _columns, _rows);
@@ -80,13 +78,13 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     rowIndexValidator(rowIndex, _rows);
 
-    final List<dynamic> row = _columns.mapIndexed((index, title) {
-      final dynamic item = items[title];
-      return item ?? _rows[rowIndex][index];
+    final List<dynamic> oldRow = _rows[rowIndex];
+    final List<dynamic> newRow = _columns.mapIndexed((index, title) {
+      return items[title] ?? oldRow[index];
     }).toList();
 
-    rowTypeValidator(row, _columns, _rows);
-    _rows[rowIndex] = row;
+    rowTypeValidator(newRow, _columns, _rows);
+    _rows[rowIndex] = newRow;
   }
 
   void removeColumn(String title) {
@@ -160,5 +158,12 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       ignoreFileExists: true,
       progressCallback: progressCallback,
     );
+  }
+
+  int indexQuery(Map<String, dynamic> items) {
+    final List<dynamic> itemsList = items.values.toList();
+    return _rows.indexWhere((items) {
+      return items.equals(itemsList);
+    });
   }
 }

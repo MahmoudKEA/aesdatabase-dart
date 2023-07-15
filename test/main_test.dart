@@ -284,5 +284,28 @@ countRow: $countRow
       expect(isLoaded, isTrue);
       expect(countRow, equals(rowsData.length - 1));
     });
+
+    test("Test (removeRow) to remove all", () async {
+      for (DBRow row in await databaseEngine.select().toList()) {
+        Map<String, dynamic> user = row.items;
+        databaseEngine.removeRow(row.index);
+        bool userExists = false;
+
+        await for (DBRow _ in databaseEngine.select(
+          items: {'username': user['username']},
+        )) {
+          userExists = true;
+        }
+
+        printDebug("""
+user: $user
+userExists: $userExists
+      """);
+
+        expect(userExists, isFalse);
+      }
+
+      expect(databaseEngine.countRow(), isZero);
+    });
   });
 }
