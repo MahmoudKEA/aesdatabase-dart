@@ -128,9 +128,9 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
 
-    try {
+    Future<void> loader(String path) async {
       final Uint8List data = await _cipher.decryptFromFile(
-        path: addAESExtension(_drive.databasePath),
+        path: addAESExtension(path),
         progressCallback: progressCallback,
       );
       final List<List<dynamic>> rows =
@@ -141,8 +141,14 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       }
 
       _rows.addAll(rows);
+    }
+
+    try {
+      await loader(_drive.databasePath);
     } on FileSystemException {
       return false;
+    } catch (_) {
+      await loader(_drive.databaseBakPath);
     }
 
     return true;
@@ -152,12 +158,16 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
 
-    return _cipher.encryptToFile(
+    final String outputPath = await _cipher.encryptToFile(
       data: jsonEncodeToBytes(_rows),
       path: _drive.databasePath,
       ignoreFileExists: true,
       progressCallback: progressCallback,
     );
+
+    await File(outputPath).copy(addAESExtension(_drive.databaseBakPath));
+
+    return outputPath;
   }
 
   int indexQuery(Map<String, dynamic> items) {

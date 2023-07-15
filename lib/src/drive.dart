@@ -42,6 +42,7 @@ class DriveSetup {
   late String _databaseExtension;
   late String _databaseDir;
   late String _databasePath;
+  late String _databaseBakPath;
 
   late String _backupFolderName;
   late String _backupFileName;
@@ -58,6 +59,8 @@ class DriveSetup {
   String get databaseDir => _databaseDir;
 
   String get databasePath => _databasePath;
+
+  String get databaseBakPath => _databaseBakPath;
 
   String get backupDir => _backupDir;
 
@@ -96,8 +99,9 @@ class DriveSetup {
     _databaseDir = pathlib.join(main, _databaseFolderName);
     _databasePath = pathlib.join(
       _databaseDir,
-      _databaseFileName + _databaseExtension,
+      '$_databaseFileName$_databaseExtension',
     );
+    _databaseBakPath = pathlib.join(_databaseDir, '$_databaseFileName.bak');
 
     if (hasSubAttachment) {
       attachmentUpdate(main: _databaseDir);
@@ -115,7 +119,7 @@ class DriveSetup {
     _backupFileName = file ?? _backupFileName;
     _backupExtension = extensionFile ?? _backupExtension;
     _backupDir = pathlib.join(main, _backupFolderName);
-    _backupPath = pathlib.join(_backupDir, _backupFileName + _backupExtension);
+    _backupPath = pathlib.join(_backupDir, '$_backupFileName$_backupExtension');
   }
 
   Future<List<String>> create() async {
