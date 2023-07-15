@@ -1,3 +1,5 @@
-## 2.0.0
+## 2.6.0
 
-- Initial version.
+- Added indexQuery method to get index dynamically.
+- Take backup of the database automatically
+- Dart 3 compatible
