@@ -128,9 +128,13 @@ class DatabaseEngine with AttachmentCore, BackupCore {
     tableCreationValidator(_columns);
     if (!_drive.isCreated) await _drive.create();
 
-    Future<void> loader(String path) async {
+    Future<bool> loader(String path) async {
+      path = addAESExtension(path);
+
+      if (!await File(path).exists()) return false;
+
       final Uint8List data = await _cipher.decryptFromFile(
-        path: addAESExtension(path),
+        path: path,
         progressCallback: progressCallback,
       );
       final List<List<dynamic>> rows =
@@ -141,17 +145,16 @@ class DatabaseEngine with AttachmentCore, BackupCore {
       }
 
       _rows.addAll(rows);
+      return true;
     }
 
     try {
-      await loader(_drive.databasePath);
-    } on FileSystemException {
-      return false;
+      return await loader(_drive.databasePath);
+    } on InvalidKeyError {
+      rethrow;
     } catch (_) {
-      await loader(_drive.databaseBakPath);
+      return await loader(_drive.databaseBakPath);
     }
-
-    return true;
   }
 
   Future<String> dump({void Function(int value)? progressCallback}) async {
